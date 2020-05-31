@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="utf-8">
+    <title>Message.js - Eris Plus</title>
+    
+    <meta name="description" content="Eris Plus" />
+    
+        <meta name="keywords" content="eris,discord,bot" />
+        <meta name="keyword" content="eris,discord,bot" />
+    
+    
+    
+    <meta property="og:title" content="Eris Plus"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:image" content=""/>
+    <meta property="og:site_name" content="Eris Plus"/>
+    <meta property="og:url" content=""/>
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+    <script src="scripts/nav.js" defer></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav >
+    
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.com/abalabahaha/eris" target="_blank" class="menu-item" id="eris_link" >Eris</a></h2><h2><a href="../api/index.html" target="_blank" class="menu-item" id="mei_link" >Mei</a></h2><h3>Classes</h3><ul><li><a href="module-erisplus.Client.html">Client</a><ul class='methods'><li data-type='method'><a href="module-erisplus.Client.html#getOwnerID">getOwnerID</a></li></ul></li><li><a href="module-erisplus.Guild.html">Guild</a></li><li><a href="module-erisplus.Member.html">Member</a></li><li><a href="module-erisplus.Message.html">Message</a><ul class='methods'><li data-type='method'><a href="module-erisplus.Message.html#deleteIn">deleteIn</a></li><li data-type='method'><a href="module-erisplus.Message.html#reply">reply</a></li></ul></li><li><a href="module-erisplus.PrivateChannel.html">PrivateChannel</a><ul class='methods'><li data-type='method'><a href="module-erisplus.PrivateChannel.html#send">send</a></li></ul></li><li><a href="module-erisplus.TextChannel.html">TextChannel</a><ul class='methods'><li data-type='method'><a href="module-erisplus.TextChannel.html#send">send</a></li></ul></li><li><a href="module-erisplus.User.html">User</a></li></ul><h3>Modules</h3><ul><li><a href="module-erisplus.html">erisplus</a></li></ul><h3>Externals</h3><ul><li><a href="external-Eris.html">Eris</a></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">Message.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+
+const Eris = require("eris");
+
+const { delay } = require("./utils");
+
+/**
+ * @class Message
+ * @memberof module:erisplus
+ * @see {@link https://abal.moe/Eris/docs/Message|Eris.Message}
+ */
+
+/**
+ * The guild this message was sent to (if sent to a guild)
+ *
+ * @memberof module:erisplus.Message#
+ * @member {Guild} guild
+ */
+function getGuild() {
+    return this.channel.guild;
+}
+
+/**
+ * The Eris Client instance
+ *
+ * @memberof module:erisplus.Message#
+ * @member {Client} bot
+ */
+function getBot() {
+    var m = this;
+    return m._client;
+}
+
+/**
+ * Reply to the message
+ *
+ * @memberof module:erisplus.Message#
+ * @function reply
+ * @param {String | Array | Object} content A string, array of strings, or object. If an object is passed:
+ * @param {String} [content.content] A content string
+ * @param {Object} [content.embed] An embed object. See [the official Discord API documentation entry](https://discordapp.com/developers/docs/resources/channel#embed-object) for object structure
+ * @param {Boolean} [content.tts] Set the message TTS flag
+ * @param {Boolean} [content.disableEveryone] Whether to filter @everyone/@here or not (overrides default)
+ * @param {Object | Array.&lt;Object>} [content.file] A file object (or an Array of them)
+ * @param {Buffer} [content.file.file] A buffer containing file data
+ * @param {String} [content.file.name] What to name the file
+ * @param {Number} [timeout] If provided, how long in milliseconds to display the message before deleting it
+ * @param {Boolean} [clean] If provided, whether to delete the original message or not.
+ * @returns {Promise&lt;Message>}
+ */
+async function reply(content, timeout, clean) {
+    var m = this;
+
+    var sentMsg = m.channel.send(content, timeout);
+
+    if (clean) {
+        m.deleteIn(timeout);
+    }
+
+    return sentMsg;
+}
+
+/**
+ * Delete the message after a timeout
+ *
+ * @memberof module:erisplus.Message#
+ * @function deleteIn
+ * @param {Number} [timeout] How long in milliseconds to wait before deleting the message
+ * @returns {Message}
+ */
+async function deleteIn(timeout) {
+    var m = this;
+
+    if (!timeout) {
+        return m;
+    }
+
+    delay(timeout)
+        .then(async function() {
+            await m.delete("Timeout");
+        })
+        .catch(function(err) {
+            if (err.code === 50013) {
+                console.warn("WRN".black.bgYellow
+                + " Missing Permissions for update".magenta.bold
+                + " - ".blue.bold + m.guild.name.cyan.bold
+                + " > ".blue.bold + "#" + m.channel.name.green.bold
+                + " (" + `https://discordapp.com/channels/${m.guild.id}/${m.channel.id}/${m.id}`.bold.red
+                + ")");
+                return;
+            }
+            if (err.code === 10008) {
+                console.warn("WRN".black.bgYellow
+                + " Message provided is unknown or missing".magenta.bold
+                + " - ".blue.bold + m.guild.name.cyan.bold
+                + " > ".blue.bold + "#" + m.channel.name.green.bold
+                + " (" + `https://discordapp.com/channels/${m.guild.id}/${m.channel.id}/${m.id}`.bold.red
+                + ")");
+                return;
+            }
+            console.error(err);
+        });
+
+    return m;
+}
+
+function patch() {
+    Object.defineProperty(Eris.Message.prototype, "guild", { get: getGuild });
+    Object.defineProperty(Eris.Message.prototype, "bot", { get: getBot });
+    Object.defineProperty(Eris.Message.prototype, "reply", { value: reply });
+    Object.defineProperty(Eris.Message.prototype, "deleteIn", { value: deleteIn });
+}
+
+module.exports = {
+    patch
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+    
+    
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.4</a> on Sun May 31 2020 07:36:58 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/polyfill.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+
+
+</body>
+</html>
